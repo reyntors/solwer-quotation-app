@@ -21,7 +21,8 @@ export default function SolarQuotationForm() {
   const [numberOfRailingPerLength, setNumberOfRailingPerLength] = useState('');
   const [comparison, setComparison] = useState('');
   const [comparisonStatus, setComparisonStatus] = useState('');
-
+  const [numberOfGroups, setNumberOfGroups] = useState('');
+ 
 
   const [result, setResult] = useState('');
 
@@ -32,6 +33,7 @@ export default function SolarQuotationForm() {
   const length = parseFloat(panelLength) || 0;
   const width = parseFloat(panelWidth) || 0;
   const numberRailing = parseFloat(numberOfRailingPerLength) || 0;
+  const numberGroups = parseFloat(numberOfGroups) || 0;
 
   if (panels === 0 || group === 0 || rail === 0 || length === 0 || width === 0 || numberRailing === 0) {
     setResult('Please fill all required fields properly.');
@@ -46,10 +48,11 @@ export default function SolarQuotationForm() {
 
   const midClamp = panels - noOfGroups;
   const endClamp = noOfGroups * 2;
-  const tFoot = panels * 2;
-  const mc4 = noOfGroups + 1;
+  const tFoot = totalRailings * 2;
+  const mc4 = 2;
   const mc4Y = Math.ceil(noOfGroups / 2);
 
+  
   const railingLengthPerGroupValue = (group * width) / 1000; // mm to meters
   setRailingLengthPerGroup(railingLengthPerGroupValue.toFixed(3));
 
@@ -59,29 +62,32 @@ export default function SolarQuotationForm() {
   const comparisonStatus = (comparisonResult >= railingLengthPerGroupValue) ? 'OK!' : 'NOT OK!';
   setComparisonStatus(comparisonStatus);
 
+  const finalRailings = totalRailings * numberGroups;
+
   setResult(`
-Railing Length per Group: ${railingLengthPerGroupValue.toFixed(2)} m
-Comparison : ${comparisonResult.toFixed(2)} m
-Status: ${comparisonStatus}
-
-Number of Groups: ${noOfGroups}
-Railings Needed per Group: ${railingNeededPerGroup.toFixed(2)} m
-Railings per Group (rounded): ${railingsPerGroup}
-Total Railings: ${totalRailings}
-
-Accessories Needed:
+Standard Data in 1 Group (Constant)
+Railings: ${totalRailings}
 Mid Clamp: ${midClamp} pcs
 End Clamp: ${endClamp} pcs
 T Foot: ${tFoot} pcs
 MC4: ${mc4} pair
-MC4-Y: ${mc4Y} pair
+MC4-Y (MC4-Y (No. of parallel): ${mc4Y} pair
+
+Accessories Needed:
+Railings: ${finalRailings} pcs.
+Mid Clamp: ${midClamp * numberGroups} pcs
+End Clamp: ${endClamp * numberGroups} pcs
+T foot: ${tFoot * numberGroups} pcs
+MC4:  ${mc4 + numberGroups - 1} pair 
+MC4-Y: ${mc4} pair
+
   `);
 };
 
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Solar Quotation Calculator</Text>
+      <Text style={styles.title}>Railings Calculator</Text>
 
       <Text style={styles.section}>Panels Specs (Input):</Text>
       <TextInput style={styles.input} placeholder="Watts (W)" keyboardType="numeric" value={watts} onChangeText={setWatts} />
@@ -93,9 +99,6 @@ MC4-Y: ${mc4Y} pair
       <Text style={styles.section}>Panel Dimension (Input):</Text>
       <TextInput style={styles.input} placeholder="Length (mm)" keyboardType="numeric" value={panelLength} onChangeText={setLength} />
       <TextInput style={styles.input} placeholder="Width (mm)" keyboardType="numeric" value={panelWidth} onChangeText={setWidth} />
-
-      <Text style={styles.section}>Railings (Input):</Text>
-      <TextInput style={styles.input} placeholder="Railings Length (m)" keyboardType="numeric" value={railLength} onChangeText={setRailLength} />
 
       <Text style={styles.section}>Enter Data Below (Input):</Text>
       <TextInput style={styles.input} placeholder="No. of Solar Panels" keyboardType="numeric" value={noOfPanels} onChangeText={setNoOfPanels} />
@@ -113,7 +116,7 @@ MC4-Y: ${mc4Y} pair
         Note: Choose a length of railings greater than this value.
       </Text>
 
-      <Text style={styles.section}>Calculate the No. of Raillings per group:</Text>
+      <Text style={styles.section}>Calculate the No. of Raillings per  group:</Text>
       <TextInput style={styles.input} placeholder="Enter No. of Railing per length" keyboardType="numeric" value={numberOfRailingPerLength} onChangeText={setNumberOfRailingPerLength} />
       
       <Text style={styles.section}>
@@ -123,10 +126,10 @@ MC4-Y: ${mc4Y} pair
         </Text>
       </Text>
 
-
+    <TextInput style={styles.input} placeholder="Number of Groups" keyboardType="numeric" value={numberOfGroups} onChangeText={setNumberOfGroups} />
 
       <View style={styles.buttonContainer}>
-        <Button title="Compute Quotation" onPress={compute} />
+        <Button title="Compute Panel Accessories" onPress={compute} />
       </View>
 
       <Text style={styles.result}>{result}</Text>
