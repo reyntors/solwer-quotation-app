@@ -1,7 +1,7 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { ScrollView, Text, TextInput, StyleSheet } from 'react-native';
+import { ScrollView,View, Text, TextInput, StyleSheet } from 'react-native';
 
 
 export default function BatteryCalculator() {
@@ -43,10 +43,9 @@ const wh = ahValue * voltageValue;
 const battWh = battNumV * wh;
 const ratedDOD = battDOD * battWh * battEfficiency;
 
-const runTimeRaw = loadConsumption > 0 ? ratedDOD / loadConsumption : 0;
-const runTime = parseFloat(runTimeRaw.toFixed(1)); // 1 decimal place
+const runTime = ratedDOD / loadConsumption;
 
-const dischargePerHour = runTime > 0 ? battDODPercent / runTime : 0;
+const dischargePerHour = battDODPercent / runTime ;
 
 const remainingBattery = 100 - battDODPercent;
 
@@ -88,7 +87,7 @@ const monthlySavingsPhp = dailySavingsPhp * 30;
 
 
 const solarSavedKwh = (solarHours * dailyLoadWatts) / 1000;
-const solarMonthlyBill = Math.round((solarSavedKwh * coopRate) * 30);
+const solarMonthlyBill = (solarSavedKwh * coopRate) * 30;
 
 
 const totalSavings = solarMonthlyBill + monthlySavingsPhp;
@@ -114,9 +113,9 @@ Rated Runtime: ${runTime} Hours
 Remaining Battery: ${remainingBattery}% 
 Rate of Discharge per Hour: ${dischargePerHour.toFixed(1)}%
 
-Not Battery Hours: ${notBatteryHours} Hours
+Not Battery Hours: ${notBatteryHours.toFixed(2)} Hours
 (Battery @100%) Purely Solar Power: ${solarHours} Hours
-Grid Power Only: ${gridHours}
+Grid Power Only: ${gridHours.toFixed(2)}
 `);
 
 setResult5(`
@@ -143,10 +142,10 @@ Monthly Consumption: ${Math.round(monthlyConsumption)} kWh
 Daily Consumption (Kwh): ${Math.round(dailyConsumptionKwh)} Kwh
 Daily Consumption (Watts): ${Math.round(dailyLoadWatts)} Watts
 
-Estimated Monthly Billing after installation of Solar: ${estimatedMonthly}
+Estimated Monthly Billing after installation of Solar: ₱${estimatedMonthly.toFixed(2)}
 
 Actual Daily Load: ${Math.round(dailyLoadWatts)} Watts
-Battery Runtime: ${batteryRunTimeHours} Hours
+Battery Runtime: ${batteryRunTimeHours.toFixed(2)} Hours
 Daily Consumption Saved: ${dailySavedKwh.toFixed(2)} kWh
 Daily Savings: ₱${dailySavingsPhp.toFixed(2)} Php
 Monthly Savings: ₱${monthlySavingsPhp.toFixed(2)} Php (Using Battery)
@@ -154,13 +153,13 @@ Monthly Savings: ₱${monthlySavingsPhp.toFixed(2)} Php (Using Battery)
 (Battery @100%) Pure Solar Runtime: ${solarHours} Hours
 Average Load Usage: ${Math.round(dailyLoadWatts)}
 Daily Consumption: ${solarSavedKwh.toFixed(2)} Kwh
-Solar Monthly Bill:  ${solarMonthlyBill} (Solar Peak Hours)
-Total Savings: ${totalSavings.toFixed(2)}
+Solar Monthly Bill:  ₱${solarMonthlyBill.toFixed(2)} (Solar Peak Hours)
+Total Savings: ₱${totalSavings.toFixed(2)}
 
-Grid Power: ${gridHours} Hours
+Grid Power: ${gridHours.toFixed(2)} Hours
 Average Load Usage: ${Math.round(dailyLoadWatts)} Watts
-daily Consumption: ${finalDailyConsumption} Kwh
-Grid Purchase Monthly Bill: ${GridPurchaseMonthlyBill} Php
+daily Consumption: ${finalDailyConsumption.toFixed(2)} Kwh
+Grid Purchase Monthly Bill: ₱${GridPurchaseMonthlyBill.toFixed(2)} Php
 `);
 
 
@@ -170,36 +169,177 @@ Grid Purchase Monthly Bill: ${GridPurchaseMonthlyBill} Php
   }, [ah, voltage, batteryNumVoltage, battDod, battEfficient, loadConsum, solarPanelSize, seriesPanels, mpptEfficiency, existingMonthlyBill, eletricCoopRate, purelySolarPower]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Battery Calculator</Text>
-      <Text style={styles.section}>Calculation for Discharging:</Text> 
+   <ScrollView contentContainerStyle={styles.container}>
+  <Text style={styles.title}>Battery Calculator</Text>
 
-      <TextInput style={styles.input} placeholder="Battery size (Ah)" keyboardType="numeric" value={ah} onChangeText={setAh} />
+  <Text style={styles.section}>Calculation for Discharging:</Text> 
 
-      <TextInput style={styles.input} placeholder="Number of Batteries" keyboardType="numeric" value={voltage} onChangeText={setVoltage} />
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Battery size:</Text>
+    <TextInput
+      style={styles.inlineInput}
+      placeholder="Ah"
+      keyboardType="numeric"
+      value={ah}
+      onChangeText={setAh}
+    />
+    <Text style={styles.unit}>Ah</Text>
+  </View>
 
-      <TextInput style={styles.input} placeholder="Battery Num. Voltage:" keyboardType="numeric" value={batteryNumVoltage} onChangeText={setBatteryNumVoltage} />
-     
-      <TextInput style={styles.input} placeholder="Battery D.O.D" keyboardType='numeric' value={battDod} onChangeText={setBattDod}/>
-      <TextInput style={styles.input} placeholder="Battery Efficiency" keyboardType='numeric' value={battEfficient} onChangeText={setbattEfficient}/>
-  
-      <TextInput style={styles.input} placeholder="Load Consumption (Watts)" keyboardType='numeric' value={loadConsum} onChangeText={setLoadConsum}/>
-      <TextInput style={styles.input} placeholder="(Battery @100%) Purely Solar Power:" keyboardType='numeric' value={purelySolarPower} onChangeText={setPurelySolarPOwer}/>
-      <Text style={styles.result}>{result4}</Text>
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Number of Batteries:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Number of Batteries"
+      keyboardType="numeric"
+      value={voltage}
+      onChangeText={setVoltage}
+    />
+    <Text style={styles.unit}>pcs.</Text>
+  </View>
 
-      <Text style={styles.section}>Calculation for Charging:</Text>
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Battery Num. Voltage:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Voltage"
+      keyboardType="numeric"
+      value={batteryNumVoltage}
+      onChangeText={setBatteryNumVoltage}
+    />
+    <Text style={styles.unit}>V</Text>
+  </View>
 
-      <TextInput style={styles.input} placeholder="Solar Panel Size (Watts)" keyboardType='numeric' value={solarPanelSize} onChangeText={setSolarPanelSize}/>
-      <TextInput style={styles.input} placeholder="Series Solar Panels (Pcs)" keyboardType='numeric' value={seriesPanels} onChangeText={setSeriesPanels}/>
-      <TextInput style={styles.input} placeholder="MPPT Efficiency (%)" keyboardType='numeric' value={mpptEfficiency} onChangeText={setMpptEfficiency}/>
-      <Text style={styles.result}>{result5}</Text>
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Battery D.O.D:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="%"
+      keyboardType="numeric"
+      value={battDod}
+      onChangeText={setBattDod}
+    />
+    <Text style={styles.unit}>%</Text>
+  </View>
 
-      <Text style={styles.section}>Calculation for Energy Savings:</Text>
-      <TextInput style={styles.input} placeholder="(₱) Existing Monthly Bill" keyboardType='numeric' value={existingMonthlyBill} onChangeText={setExistingMonthlyBill}/>
-      <TextInput style={styles.input} placeholder="(₱) Electric Cooperative Rate /kWh" keyboardType='numeric' value={eletricCoopRate} onChangeText={setElectricCoopRate}/>
-      <TextInput style={styles.input} placeholder="(Battery @100%) Purely Solar Power:" keyboardType='numeric' value={purelySolarPower} onChangeText={setPurelySolarPOwer}/>
-      <Text style={styles.result}>{result6}</Text>
-      </ScrollView>
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Battery Efficiency:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="%"
+      keyboardType="numeric"
+      value={battEfficient}
+      onChangeText={setbattEfficient}
+    />
+    <Text style={styles.unit}>%</Text>
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Load Consumption:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Watts"
+      keyboardType="numeric"
+      value={loadConsum}
+      onChangeText={setLoadConsum}
+    />
+    <Text style={styles.unit}>W</Text>
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Pure Solar Power:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Watts"
+      keyboardType="numeric"
+      value={purelySolarPower}
+      onChangeText={setPurelySolarPOwer}
+    />
+    <Text style={styles.unit}>W</Text>
+  </View>
+
+  <Text style={styles.result}>{result4}</Text>
+
+  <Text style={styles.section}>Calculation for Charging:</Text>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Solar Panel Size:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Watts"
+      keyboardType="numeric"
+      value={solarPanelSize}
+      onChangeText={setSolarPanelSize}
+    />
+    <Text style={styles.unit}>W</Text>
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Series Panels:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="pcs"
+      keyboardType="numeric"
+      value={seriesPanels}
+      onChangeText={setSeriesPanels}
+    />
+    <Text style={styles.unit}>pcs.</Text>
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>MPPT Efficiency:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="%"
+      keyboardType="numeric"
+      value={mpptEfficiency}
+      onChangeText={setMpptEfficiency}
+    />
+    <Text style={styles.unit}>%</Text>
+  </View>
+
+  <Text style={styles.result}>{result5}</Text>
+
+  <Text style={styles.section}>Calculation for Energy Savings:</Text>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Monthly Bill (₱):</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="₱"
+      keyboardType="numeric"
+      value={existingMonthlyBill}
+      onChangeText={setExistingMonthlyBill}
+    />
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Rate per kWh:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="₱"
+      keyboardType="numeric"
+      value={eletricCoopRate}
+      onChangeText={setElectricCoopRate}
+    />
+    <Text style={styles.unit}>₱</Text>
+  </View>
+
+  <View style={styles.inlineGroup}>
+    <Text style={styles.label}>Pure Solar Power:</Text>
+    <TextInput 
+      style={styles.inlineInput}
+      placeholder="Watts"
+      keyboardType="numeric"
+      value={purelySolarPower}
+      onChangeText={setPurelySolarPOwer}
+    />
+    <Text style={styles.unit}>W</Text>
+  </View>
+
+  <Text style={styles.result}>{result6}</Text>
+</ScrollView>
+
   );
 }
 
@@ -215,6 +355,7 @@ const styles = StyleSheet.create({
     marginBottom: 15, 
     textAlign: 'center' },
   input: { 
+    
     borderWidth: 1,
      borderColor: '#ccc',
       padding: 10,
@@ -235,5 +376,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 5,
   },
+   inlineGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  label: {
+    fontSize: 16,
+    width: 120, // adjust to align nicely
+  },
+  inlineInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  unit: {
+    fontSize: 16,
+    width: 30,
+  }
 
 });

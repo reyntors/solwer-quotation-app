@@ -63,6 +63,10 @@ export default function SolarQuotationForm() {
   setComparisonStatus(comparisonStatus);
 
   const finalRailings = totalRailings * numberGroups;
+  const finalMidClamp = midClamp * numberGroups;
+  const finalEndClamp = endClamp * numberGroups;
+  const finaltFoot = tFoot * numberGroups;
+  const finalMc4 = mc4 + numberGroups - 1
 
   setResult(`
 Standard Data in 1 Group (Constant)
@@ -75,14 +79,16 @@ MC4-Y (MC4-Y (No. of parallel): ${mc4Y} pair
 
 Accessories Needed:
 Railings: ${finalRailings} pcs.
-Mid Clamp: ${midClamp * numberGroups} pcs
-End Clamp: ${endClamp * numberGroups} pcs
-T foot: ${tFoot * numberGroups} pcs
-MC4:  ${mc4 + numberGroups - 1} pair 
-MC4-Y: ${mc4} pair
+Mid Clamp: ${finalMidClamp} pcs
+End Clamp: ${finalEndClamp} pcs
+T foot: ${finaltFoot } pcs
+MC4:  ${finalMc4} pair 
+MC4-Y: ${mc4Y} pair
 
   `);
 };
+
+
 
 
   return (
@@ -169,3 +175,5 @@ const styles = StyleSheet.create({
     
   },
 });
+
+

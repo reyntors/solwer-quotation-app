@@ -20,7 +20,7 @@ export default function RootLayout() {
       <Drawer>
         <Drawer.Screen name="railingsCalculator" options={{ title: 'Railings Calculator' }} />
         <Drawer.Screen name="batteryCalculator" options={{ title: 'Battery Calculator' }} />
-        <Drawer.Screen name="index" options={{ title: 'Home' }} />
+        <Drawer.Screen name="index" options={{ title: '6.0 KW HYBRID (FULL) "SOLWER QUOTATION' }} />
 
       </Drawer>
       <StatusBar style="auto" />
