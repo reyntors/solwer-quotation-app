@@ -77,8 +77,6 @@ const monthlyConsumption =  existingBill / coopRate; // kWh
 const dailyConsumptionKwh = monthlyConsumption / 30; // kWh
 const dailyLoadWatts = (dailyConsumptionKwh * 1000) / 24; // Watts
 
-
-
 const batteryRunTimeHours = runTime; // from previous calculation
 
 const dailySavedKwh = (batteryRunTimeHours * dailyLoadWatts) / 1000;
