@@ -1,399 +1,428 @@
-
-
-import React, { useEffect, useState } from 'react';
-import { ScrollView,View, Text, TextInput, StyleSheet } from 'react-native';
-
+import React, { useState } from 'react';
+import { ScrollView, View, Text, TextInput, SafeAreaView, Image } from 'react-native';
+import icons from '@/constants/icons';
 
 export default function BatteryCalculator() {
   const [ah, setAh] = useState('');
   const [voltage, setVoltage] = useState('');
-
-  const [result4, setResult4] = useState('');
-  const [result5, setResult5] = useState('');
-  const [result6, setResult6] = useState('');
   const [batteryNumVoltage, setBatteryNumVoltage] = useState('');
   const [battDod, setBattDod] = useState('');
-  const [battEfficient, setbattEfficient] = useState('');
+  const [battEfficient, setBattEfficient] = useState('');
   const [loadConsum, setLoadConsum] = useState('');
   const [solarPanelSize, setSolarPanelSize] = useState('');
   const [seriesPanels, setSeriesPanels] = useState('');
   const [mpptEfficiency, setMpptEfficiency] = useState('');
-  const [existingMonthlyBill, setExistingMonthlyBill] = useState('')
+  const [existingMonthlyBill, setExistingMonthlyBill] = useState('');
   const [eletricCoopRate, setElectricCoopRate] = useState('');
-  const [purelySolarPower, setPurelySolarPOwer] = useState('')
+  const [purelySolarPower, setPurelySolarPower] = useState('');
 
-
-
-
-  useEffect(() => {
-    const ahValue = parseFloat(ah) || 0;
-const voltageValue = parseFloat(voltage) || 0;
-const battNumV = parseFloat(batteryNumVoltage) || 0;
-
-const battDODPercent = parseFloat(battDod) || 0; // 70%
-const battDOD = battDODPercent / 100;
-
-const battEfficiencyPercent = parseFloat(battEfficient) || 0; // 93%
-const battEfficiency = battEfficiencyPercent / 100;
-
-const loadConsumption = parseFloat(loadConsum) || 0;
-
-// Computations
-const wh = ahValue * voltageValue;
-const battWh = battNumV * wh;
-const ratedDOD = battDOD * battWh * battEfficiency;
-
-const runTime = ratedDOD / loadConsumption;
-
-const dischargePerHour = battDODPercent / runTime ;
-
-const remainingBattery = 100 - battDODPercent;
-
- // Solar and Grid Power Hours
-
-  const solarHours = parseInt(purelySolarPower) || 0; // fixed value
- const notBatteryHours = 24 - runTime;
-  const gridHours = notBatteryHours - solarHours; // No negative hours
-
-const solarSize = parseFloat(solarPanelSize) || 0; // in Watts
-const seriesCount = parseFloat(seriesPanels) || 0;
-const mpptEffPercent = parseFloat(mpptEfficiency) || 0;
-const mpptEff = mpptEffPercent / 100;
-
-const totalSolarPower = solarSize * seriesCount; // Total solar panel output
-
-const energyToRecharge = battWh * battDOD; // Wh
-const adjustedPower = totalSolarPower * mpptEff; // 4 peak sun hours
-
-const chargingTime = energyToRecharge / adjustedPower;
-
-
-const existingBill = parseFloat(existingMonthlyBill) || 0;
-const coopRate = parseFloat(eletricCoopRate) || 0;
-
-
-
-const monthlyConsumption =  existingBill / coopRate; // kWh
-const dailyConsumptionKwh = monthlyConsumption / 30; // kWh
-const dailyLoadWatts = (dailyConsumptionKwh * 1000) / 24; // Watts
-
-const batteryRunTimeHours = runTime; // from previous calculation
-
-const dailySavedKwh = (batteryRunTimeHours * dailyLoadWatts) / 1000;
-const dailySavingsPhp = dailySavedKwh * coopRate;
-const monthlySavingsPhp = dailySavingsPhp * 30;
-
-
-const solarSavedKwh = (solarHours * dailyLoadWatts) / 1000;
-const solarMonthlyBill = (solarSavedKwh * coopRate) * 30;
-
-
-const totalSavings = solarMonthlyBill + monthlySavingsPhp;
-const finalDailyConsumption = (dailyLoadWatts * gridHours) / 1000;
-const GridPurchaseMonthlyBill = (finalDailyConsumption * coopRate) * 30;
-
-const estimatedMonthly = existingBill - totalSavings;
-
-
-setResult4(`
-  --Discharging Computation--
-
-Battery Size: ${ahValue} Ah
-Number of Batteries: ${voltageValue} pcs.
-Total Battery Size: ${wh} (Ampere-Hour)
-Battery Nom. Voltage: ${battNumV} Volts
-Battery WH: ${battWh} (Watt-Hour)
-Battery D.O.D: ${battDODPercent} %
-Battery Efficiency: ${battEfficient} %
-Rated D.O.D: ${ratedDOD.toFixed(3)}
-Load Consumption: ${loadConsumption} Watts
-Rated Runtime: ${runTime} Hours
-Remaining Battery: ${remainingBattery}% 
-Rate of Discharge per Hour: ${dischargePerHour.toFixed(1)}%
-
-Not Battery Hours: ${notBatteryHours.toFixed(2)} Hours
-(Battery @100%) Purely Solar Power: ${solarHours} Hours
-Grid Power Only: ${gridHours.toFixed(2)}
-`);
-
-setResult5(`
-  --Charging Computation--
-
-Solar Panel Size: ${solarSize} W
-Series Solar Panels: ${seriesCount} pcs
-Total Solar Panels: ${totalSolarPower} W (Base from 4 hours sun hours)
-MPPT Efficiency: ${mpptEffPercent}%
-% Battery Discharge: ${battDODPercent}%
-Remaining Battery :${100 - battDODPercent}%
-
-Step 1: Energy to Recharge: ${energyToRecharge.toFixed(2)} Wh
-Step 2: Adjusted for Efficiency: ${adjustedPower} W
-Step 3: Charging Time: ${chargingTime.toFixed(2)} Hours
-`);
-
-setResult6(`
-  --Energy Savings Computation--
-
-Existing Monthly Bill: ₱${existingBill} 
-Electric Cooperative Rate: ₱${coopRate} / kWh
-Monthly Consumption: ${Math.round(monthlyConsumption)} kWh
-Daily Consumption (Kwh): ${Math.round(dailyConsumptionKwh)} Kwh
-Daily Consumption (Watts): ${Math.round(dailyLoadWatts)} Watts
-
-Estimated Monthly Billing after installation of Solar: ₱${estimatedMonthly.toFixed(2)}
-
-Actual Daily Load: ${Math.round(dailyLoadWatts)} Watts
-Battery Runtime: ${batteryRunTimeHours.toFixed(2)} Hours
-Daily Consumption Saved: ${dailySavedKwh.toFixed(2)} kWh
-Daily Savings: ₱${dailySavingsPhp.toFixed(2)} Php
-Monthly Savings: ₱${monthlySavingsPhp.toFixed(2)} Php (Using Battery)
-
-(Battery @100%) Pure Solar Runtime: ${solarHours} Hours
-Average Load Usage: ${Math.round(dailyLoadWatts)}
-Daily Consumption: ${solarSavedKwh.toFixed(2)} Kwh
-Solar Monthly Bill:  ₱${solarMonthlyBill.toFixed(2)} (Solar Peak Hours)
-Total Savings: ₱${totalSavings.toFixed(2)}
-
-Grid Power: ${gridHours.toFixed(2)} Hours
-Average Load Usage: ${Math.round(dailyLoadWatts)} Watts
-daily Consumption: ${finalDailyConsumption.toFixed(2)} Kwh
-Grid Purchase Monthly Bill: ₱${GridPurchaseMonthlyBill.toFixed(2)} Php
-`);
-
-
-
-
-
-  }, [ah, voltage, batteryNumVoltage, battDod, battEfficient, loadConsum, solarPanelSize, seriesPanels, mpptEfficiency, existingMonthlyBill, eletricCoopRate, purelySolarPower]);
+  // parse helpers
+  const num = (val: string) => parseFloat(val);
 
   return (
-   <ScrollView contentContainerStyle={styles.container}>
-  <Text style={styles.title}>Battery Calculator</Text>
+    <SafeAreaView className="h-full bg-white-100">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="p-1 pb-2">
+        
+                 <View className="flex-row items-center justify-center mt-5">
+                      {/* Icon on the left */}
+                      <View className="bg-blue-400 rounded-2xl p-3 mr-3">
+                        <Image source={icons.accumulator} className="size-10" />
+                      </View>
 
-  <Text style={styles.section}>Calculation for Discharging:</Text> 
+                      {/* Title centered */}
+                      <Text className="text-2xl font-rubik-bold text-center">
+                        Battery Calculator
+                      </Text>
+                      
+                    </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Battery size:</Text>
-    <TextInput
-      style={styles.inlineInput}
-      placeholder="Ah"
-      keyboardType="numeric"
-      value={ah}
-      onChangeText={setAh}
-    />
-    <Text style={styles.unit}>Ah</Text>
+           
+       
+        {/* Discharging Card */}
+        <View className="bg-white rounded-2xl p-4 shadow mb-4 mt-5 items-center">
+          <Text className="font-rubik-bold text-lg mb-3">🔋 Discharging Calculation</Text>
+
+          {/* Inputs */}
+          <View className="flex-row items-center my-2">
+            <Text className="w-36 font-rubik-bold">Battery size</Text>
+            <TextInput
+              value={ah}
+              onChangeText={setAh}
+              keyboardType="numeric"
+              placeholder="Ah"
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2 "
+            />
+            <Text className="w-10">Ah</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36 font-rubik-bold">Number of Batteries</Text>
+            <TextInput
+              value={voltage}
+              onChangeText={setVoltage}
+              keyboardType="numeric"
+              placeholder="pcs."
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2"
+            />
+            <Text className="w-10">pcs.</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36 font-rubik-bold">Battery Nom. Voltage</Text>
+            <TextInput
+              value={batteryNumVoltage}
+              onChangeText={setBatteryNumVoltage}
+              keyboardType="numeric"
+              placeholder="V"
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2"
+            />
+            <Text className="w-10">V</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36 font-rubik-bold">Battery D.O.D</Text>
+            <TextInput
+              value={battDod}
+              onChangeText={setBattDod}
+              keyboardType="numeric"
+              placeholder="%"
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2"
+            />
+            <Text className="w-10">%</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36 font-rubik-bold">Battery Efficiency</Text>
+            <TextInput
+              value={battEfficient}
+              onChangeText={setBattEfficient}
+              keyboardType="numeric"
+              placeholder="%"
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2 "
+            />
+            <Text className="w-10">%</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="font-rubik-bold w-36">Load Consumption</Text>
+            <TextInput
+              value={loadConsum}
+              onChangeText={setLoadConsum}
+              keyboardType="numeric"
+              placeholder="W"
+              className="flex-1 border border-gray-300 rounded-2xl px-3 py-3 mr-2 "
+            />
+            <Text className="w-10">W</Text>
+          </View>
+
+      
+          {ah && voltage && batteryNumVoltage && battDod && battEfficient && loadConsum ? (() => {
+            const ahValue = num(ah);
+            const voltageValue = num(voltage);
+            const battNumV = num(batteryNumVoltage);
+            const battDODPercent = num(battDod);
+            const battEfficiencyPercent = num(battEfficient);
+            const loadConsumption = num(loadConsum);
+            const solarHours = parseInt(purelySolarPower) || 0;
+
+            if (
+              !isNaN(ahValue) && !isNaN(voltageValue) &&
+              !isNaN(battNumV) && !isNaN(battDODPercent) &&
+              !isNaN(battEfficiencyPercent) && !isNaN(loadConsumption)
+            ) {
+              const wh = ahValue * voltageValue;
+              const battWh = battNumV * wh;
+              const ratedDOD = (battDODPercent / 100) * battWh * (battEfficiencyPercent / 100);
+              const runTime = ratedDOD / loadConsumption;
+              const dischargePerHour = battDODPercent / runTime;
+              const remainingBattery = 100 - battDODPercent;
+              const notBatteryHours = 24 - runTime;
+              const gridHours = notBatteryHours - solarHours;
+
+              return (
+                <View className="mt-3 bg-orange-100 rounded-2xl p-4 border-l-4 border-orange-400">
+                  <Text className="font-rubik-bold text-xl p-5">Discharging Computation</Text>
+                  <View className='flex flex-row justify-between mt-2'>
+                        <Text className='font-rubik-medium text-lg'>Battery Size: </Text>
+                        <Text className='font-rubik-bold text-xl color-orange-600'>{ahValue} Ah</Text>
+                  </View>
+                   <View className='flex flex-row justify-between mt-2  '>
+                  <Text className='font-rubik-medium text-lg'>Number of Batteries: </Text>
+                  <Text className='font-rubik-bold text-xl color-orange-600'>{voltageValue} pcs.</Text>
+                  </View>
+                   <View className='flex flex-row justify-between mt-2'>
+                  <Text className='font-rubik-medium text-lg'>Total Battery Size: </Text>
+                   <Text className='font-rubik-bold text-xl color-orange-600'>{wh} (AH)</Text>
+                  </View>
+                     <View className='flex flex-row justify-between mt-2'> 
+                  <Text className='font-rubik-medium text-lg'>Battery Nom. Voltage: </Text>
+                   <Text className='font-rubik-bold text-xl color-orange-600'>{battNumV} V</Text>
+                  </View>
+                  <View className=' flex flex-row justify-between mt-2'>
+                  <Text className='font-rubik-medium text-lg'>Battery WH: </Text>
+                  <Text className='font-rubik-bold text-xl color-orange-600'> {battWh} Wh</Text>
+                  </View>
+                   <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Battery D.O.D: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{battDODPercent}%</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Number of Batteries:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Number of Batteries"
-      keyboardType="numeric"
-      value={voltage}
-      onChangeText={setVoltage}
-    />
-    <Text style={styles.unit}>pcs.</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Battery Efficiency: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{battEfficiencyPercent}%</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Battery Num. Voltage:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Voltage"
-      keyboardType="numeric"
-      value={batteryNumVoltage}
-      onChangeText={setBatteryNumVoltage}
-    />
-    <Text style={styles.unit}>V</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Rated D.O.D: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{ratedDOD.toFixed(2)}</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Battery D.O.D:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="%"
-      keyboardType="numeric"
-      value={battDod}
-      onChangeText={setBattDod}
-    />
-    <Text style={styles.unit}>%</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Load Consumption: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{loadConsumption} W</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Battery Efficiency:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="%"
-      keyboardType="numeric"
-      value={battEfficient}
-      onChangeText={setbattEfficient}
-    />
-    <Text style={styles.unit}>%</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Rated Runtime: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{runTime.toFixed(2)} Hrs</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Load Consumption:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Watts"
-      keyboardType="numeric"
-      value={loadConsum}
-      onChangeText={setLoadConsum}
-    />
-    <Text style={styles.unit}>W</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Remaining Battery: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{remainingBattery}%</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Pure Solar Power:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Watts"
-      keyboardType="numeric"
-      value={purelySolarPower}
-      onChangeText={setPurelySolarPOwer}
-    />
-    <Text style={styles.unit}>W</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Rate of Discharge per Hour: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{dischargePerHour.toFixed(1)}%</Text>
   </View>
 
-  <Text style={styles.result}>{result4}</Text>
-
-  <Text style={styles.section}>Calculation for Charging:</Text>
-
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Solar Panel Size:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Watts"
-      keyboardType="numeric"
-      value={solarPanelSize}
-      onChangeText={setSolarPanelSize}
-    />
-    <Text style={styles.unit}>W</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Not Battery Hours: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{notBatteryHours.toFixed(2)} Hrs</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Series Panels:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="pcs"
-      keyboardType="numeric"
-      value={seriesPanels}
-      onChangeText={setSeriesPanels}
-    />
-    <Text style={styles.unit}>pcs.</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Purely Solar Power: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{solarHours} Hrs</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>MPPT Efficiency:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="%"
-      keyboardType="numeric"
-      value={mpptEfficiency}
-      onChangeText={setMpptEfficiency}
-    />
-    <Text style={styles.unit}>%</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Grid Power Only: </Text>
+    <Text className="font-rubik-bold text-xl text-orange-600">{gridHours.toFixed(2)} Hrs</Text>
+  </View>
+                </View>
+              );
+            }
+          })() : null}
+        </View>
+
+        {/* ⚡ Charging Card */}
+        <View className="bg-white rounded-2xl p-4 shadow mb-4">
+          <Text className="font-rubik-bold text-lg mb-3">⚡ Charging Calculation</Text>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">Solar Panel Size</Text>
+            <TextInput
+              value={solarPanelSize}
+              onChangeText={setSolarPanelSize}
+              keyboardType="numeric"
+              placeholder="W"
+              className="flex-1 border border-gray-300 rounded-xl px-3 py-3 mr-2"
+            />
+            <Text className="w-10">W</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">Series Panels</Text>
+            <TextInput
+              value={seriesPanels}
+              onChangeText={setSeriesPanels}
+              keyboardType="numeric"
+              placeholder="pcs."
+              className="flex-1 border border-gray-300 rounded-xl px-3  py-3 mr-2"
+            />
+            <Text className="w-10">pcs.</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">MPPT Efficiency</Text>
+            <TextInput
+              value={mpptEfficiency}
+              onChangeText={setMpptEfficiency}
+              keyboardType="numeric"
+              placeholder="%"
+              className="flex-1 border border-gray-300 rounded-xl px-3  py-3 mr-2"
+            />
+            <Text className="w-10">%</Text>
+          </View>
+
+          {/* Results inline */}
+          {solarPanelSize && seriesPanels && mpptEfficiency && battDod ? (() => {
+            const solarSize = num(solarPanelSize);
+            const seriesCount = num(seriesPanels);
+            const mpptEffPercent = num(mpptEfficiency);
+            const battDODPercent = num(battDod);
+
+            if (!isNaN(solarSize) && !isNaN(seriesCount) && !isNaN(mpptEffPercent) && !isNaN(battDODPercent)) {
+              const mpptEff = mpptEffPercent / 100;
+              const totalSolarPower = solarSize * seriesCount;
+              const battWh = num(batteryNumVoltage) * (num(ah) * num(voltage));
+              const energyToRecharge = battWh * (battDODPercent / 100);
+              const adjustedPower = totalSolarPower * mpptEff;
+              const chargingTime = energyToRecharge / adjustedPower;
+
+              return (
+                <View className="mt-3 bg-green-100 rounded-2xl p-4 border-l-4 border-green-400">
+  <Text className="font-rubik-bold text-xl p-5">Charging Computation</Text>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Solar Panel Size: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{solarSize} W</Text>
   </View>
 
-  <Text style={styles.result}>{result5}</Text>
-
-  <Text style={styles.section}>Calculation for Energy Savings:</Text>
-
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Monthly Bill (₱):</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="₱"
-      keyboardType="numeric"
-      value={existingMonthlyBill}
-      onChangeText={setExistingMonthlyBill}
-    />
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Series Solar Panels: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{seriesCount} pcs</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Rate per kWh:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="₱"
-      keyboardType="numeric"
-      value={eletricCoopRate}
-      onChangeText={setElectricCoopRate}
-    />
-    <Text style={styles.unit}>₱</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Total Solar Panels: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{totalSolarPower} W</Text>
   </View>
 
-  <View style={styles.inlineGroup}>
-    <Text style={styles.label}>Pure Solar Power:</Text>
-    <TextInput 
-      style={styles.inlineInput}
-      placeholder="Watts"
-      keyboardType="numeric"
-      value={purelySolarPower}
-      onChangeText={setPurelySolarPOwer}
-    />
-    <Text style={styles.unit}>W</Text>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">MPPT Efficiency: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{mpptEffPercent}%</Text>
   </View>
 
-  <Text style={styles.result}>{result6}</Text>
-</ScrollView>
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Battery Discharge: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{battDODPercent}%</Text>
+  </View>
 
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Remaining Battery: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{100 - battDODPercent}%</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Energy to Recharge: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{energyToRecharge.toFixed(2)} Wh</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Adjusted for Efficiency: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{adjustedPower.toFixed(2)} W</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Charging Time: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{chargingTime.toFixed(2)} Hrs</Text>
+  </View>
+</View>
+              );
+            }
+          })() : null}
+        </View>
+
+        {/* 💰 Energy Savings Card */}
+        <View className="bg-white rounded-2xl p-4 shadow mb-6 items-center">
+          <Text className="font-rubik-bold text-lg mb-3">💰 Energy Savings Calculation</Text>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">Monthly Bill (₱)</Text>
+            <TextInput
+              value={existingMonthlyBill}
+              onChangeText={setExistingMonthlyBill}
+              keyboardType="numeric"
+              placeholder="₱"
+              className="flex-1 border border-gray-300 rounded-xl px-3  py-3 mr-2"
+            />
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">Rate per kWh</Text>
+            <TextInput
+              value={eletricCoopRate}
+              onChangeText={setElectricCoopRate}
+              keyboardType="numeric"
+              placeholder="₱"
+              className="flex-1 border border-gray-300 rounded-xl px-3  py-3 mr-2"
+            />
+            <Text className="w-10">₱</Text>
+          </View>
+
+          <View className="flex-row items-center my-2">
+            <Text className="w-36">Pure Solar Power</Text>
+            <TextInput
+              value={purelySolarPower}
+              onChangeText={setPurelySolarPower}
+              keyboardType="numeric"
+              placeholder="hours"
+              className="flex-1 border border-gray-300 rounded-xl px-3  py-3 mr-2"
+            />
+            <Text className="w-10">hrs</Text>
+          </View>
+
+          {/* Results inline */}
+          {existingMonthlyBill && eletricCoopRate ? (() => {
+            const existingBill = num(existingMonthlyBill);
+            const coopRate = num(eletricCoopRate);
+            const solarHours = parseInt(purelySolarPower) || 0;
+
+            if (!isNaN(existingBill) && !isNaN(coopRate)) {
+              const monthlyConsumption = existingBill / coopRate;
+              const dailyConsumptionKwh = monthlyConsumption / 30;
+              const dailyLoadWatts = (dailyConsumptionKwh * 1000) / 24;
+              const solarSavedKwh = (solarHours * dailyLoadWatts) / 1000;
+              const solarMonthlyBill = solarSavedKwh * coopRate * 30;
+              const estimatedMonthly = existingBill - solarMonthlyBill;
+
+              return (
+                <View className="mt-3 bg-green-100 rounded-2xl p-4 border-l-4 border-green-400">
+  <Text className="font-rubik-bold text-xl p-5 ">Energy Savings Computation</Text>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Existing Monthly Bill: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">₱{existingBill}</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Electric Coop Rate: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">₱{coopRate}/kWh</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Monthly Consumption: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{Math.round(monthlyConsumption)} kWh</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Daily Consumption: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{Math.round(dailyConsumptionKwh)} kWh</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Daily Load: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">{Math.round(dailyLoadWatts)} W</Text>
+  </View>
+
+  <View className="flex flex-row justify-between mt-2">
+    <Text className="font-rubik-medium text-lg">Solar Monthly Bill: </Text>
+    <Text className="font-rubik-bold text-xl text-green-600">₱{solarMonthlyBill.toFixed(2)}</Text>
+  </View>
+    <Text className="font-rubik-medium text-lg mt-5">Estimated Monthly Bill After Solar: </Text>
+  <View className="flex flex-row justify-between mt-2">
+    
+    <Text className="font-rubik-bold text-xl text-green-600">₱{estimatedMonthly.toFixed(2)}</Text>
+  </View>
+</View>
+              );
+            }
+          })() : null}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { 
-    padding: 20, 
-    flexGrow: 1 
-  },
-  title: { 
-    fontSize: 22, 
-    fontWeight: 
-    'bold', 
-    marginBottom: 15, 
-    textAlign: 'center' },
-  input: { 
-    
-    borderWidth: 1,
-     borderColor: '#ccc',
-      padding: 10,
-       marginVertical: 5,
-        borderRadius: 5 },
-  result: { 
-    marginTop: 0,
-     fontSize: 13 
-    },
-     subtitle: {
-    fontSize: 15, // H2 size (smaller)
-    fontWeight: '500',
-    color: '#555',
-    marginBottom: 15,
-  },
-  section: {
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 5,
-  },
-   inlineGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  label: {
-    fontSize: 16,
-    width: 120, // adjust to align nicely
-  },
-  inlineInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 6,
-  },
-  unit: {
-    fontSize: 16,
-    width: 30,
-  }
-
-});

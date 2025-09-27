@@ -1,7 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import {Databases, ID, Client} from "react-native-appwrite"
+import { useGlobalContext } from '@/lib/global-provider';
+
+export const config = {
+    platform: 'com.solwer.solwerquotation',
+    endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
+    projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID,
+    databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID,
+    collectionId: process.env.EXPO_PUBLIC_APPWRITE_ACCESORIES_COLLECTION_ID
+}
+export const client = new Client();
+
+client
+    .setEndpoint(config.endpoint!)
+    .setProject(config.projectId!)
+    .setPlatform(config.platform)
+    
+
+
+const databases = new Databases(client);
+
 // @ts-ignore
-export default function SolarQuotationForm({ onComputeResult }) {
+export default function RailingsCalculator({ onComputeResult }: { onComputeResult?: (result: any) => void }) {
+  const {user} = useGlobalContext();
   const [watts, setWatts] = useState('');
   const [voc, setVoc] = useState('');
   const [isc, setIsc] = useState('');
@@ -20,7 +42,8 @@ export default function SolarQuotationForm({ onComputeResult }) {
   const [numberOfGroups, setNumberOfGroups] = useState('');
   const [result, setResult] = useState('');
 
-  const compute = () => {
+  // ✅ Make this async
+  const compute = async () => {
     const panels = parseInt(noOfPanels) || 0;
     const group = parseInt(panelsPerGroup) || 0;
     const rail = parseFloat(railLength) || 0;
@@ -62,15 +85,21 @@ export default function SolarQuotationForm({ onComputeResult }) {
     const finalMc4 = mc4 + numberGroups - 1;
 
     const resultData = {
+      totalRailings,
+      midClamp,
+      endClamp,
+      tFoot,
+      mc4,
+      mc4Y,
       finalRailings,
       finalMidClamp,
       finalEndClamp,
-      superfinaltFoot,
+      finaltFoot,
       finalMc4,
-      mc4Y,
+      superfinaltFoot
     };
 
-    setResult(`
+    const resultString = `
 Standard Data in 1 Group (Constant)
 Railings: ${totalRailings}
 Mid Clamp: ${midClamp} pcs
@@ -86,224 +115,228 @@ End Clamp: ${finalEndClamp} pcs
 T foot: ${finaltFoot} pcs
 MC4: ${finalMc4} pair
 MC4-Y: ${mc4Y} pair
-    `);
+    `;
+    setResult(resultString);
 
     if (onComputeResult) {
       onComputeResult(resultData);
     }
+
+    // ✅ Save to Appwrite
+   
+    try {
+      await databases.createDocument(
+              config.databaseId!,
+              config.collectionId!,
+              ID.unique(),
+              {
+                userId: user?.$id,
+                finalRailings,
+                finalMidClamp,
+                finalEndClamp,
+                superfinaltFoot,
+              
+              },
+           
+            );
+      console.log("✅ Data saved to Appwrite");
+    } catch (error) {
+        
+      console.error("❌ Error saving to Appwrite:", error);
+    }
   };
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Railings Calculator</Text>
+  
 
-      <Text style={styles.section}>Panels Specs (Input):</Text>
-      <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Watts:</Text>
+  return (
+    <ScrollView contentContainerClassName="p-5 flex-grow">
+      <Text className="text-xl font-bold mb-4 text-center">Railings Calculator</Text>
+
+      <Text className="font-bold mt-5 mb-2">Panels Specs (Input):</Text>
+
+      {/* Watts */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Watts:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="W"
           keyboardType="numeric"
           value={watts}
           onChangeText={setWatts}
         />
-        <Text style={styles.unit}>W</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Voc:</Text>
+        <Text className="w-8 text-base">W</Text>
+      </View>
+
+      {/* Voc */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Voc:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="V"
           keyboardType="numeric"
           value={voc}
           onChangeText={setVoc}
         />
-        <Text style={styles.unit}>V</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Isc:</Text>
+        <Text className="w-8 text-base">V</Text>
+      </View>
+
+      {/* Isc */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Isc:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="A"
           keyboardType="numeric"
           value={isc}
           onChangeText={setIsc}
         />
-        <Text style={styles.unit}>A</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Vmp:</Text>
+        <Text className="w-8 text-base">A</Text>
+      </View>
+
+      {/* Vmp */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Vmp:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="V"
           keyboardType="numeric"
           value={vmp}
           onChangeText={setVmp}
         />
-        <Text style={styles.unit}>V</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Imp:</Text>
+        <Text className="w-8 text-base">V</Text>
+      </View>
+
+      {/* Imp */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Imp:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="A"
           keyboardType="numeric"
           value={imp}
           onChangeText={setImp}
         />
-        <Text style={styles.unit}>A</Text>
-    </View>
-      
+        <Text className="w-8 text-base">A</Text>
+      </View>
 
+      <Text className="font-bold mt-5 mb-2">Panel Dimension (Input):</Text>
 
-      <Text style={styles.section}>Panel Dimension (Input):</Text>
-       <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Length:</Text>
+      {/* Panel Length */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Length:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="mm"
           keyboardType="numeric"
           value={panelLength}
           onChangeText={setLength}
         />
-        <Text style={styles.unit}>mm</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Width:</Text>
+        <Text className="w-10 text-base">mm</Text>
+      </View>
+
+      {/* Panel Width */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-28 text-base">Width:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="mm"
           keyboardType="numeric"
           value={panelWidth}
           onChangeText={setWidth}
         />
-        <Text style={styles.unit}>mm</Text>
-    </View>
-      <Text style={styles.section}>Enter Data Below (Input):</Text>
-       <View style={styles.inlineGroup}>
-      <Text style={styles.label}>No. of Solar Panels:</Text>
+        <Text className="w-10 text-base">mm</Text>
+      </View>
+
+      <Text className="font-bold mt-5 mb-2">Enter Data Below (Input):</Text>
+
+      {/* No. of Panels */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-40 text-base">No. of Solar Panels:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="No. of Solar Panels"
           keyboardType="numeric"
           value={noOfPanels}
           onChangeText={setNoOfPanels}
         />
-        <Text style={styles.unit}>pcs.</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Panels per Group:</Text>
+        <Text className="w-12 text-base">pcs.</Text>
+      </View>
+
+      {/* Panels per Group */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-40 text-base">Panels per Group:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="Panels per Group"
           keyboardType="numeric"
           value={panelsPerGroup}
           onChangeText={setPanelsPerGroup}
         />
-        <Text style={styles.unit}>pcs.</Text>
-    </View>
-     <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Length of Railings:</Text>
+        <Text className="w-12 text-base">pcs.</Text>
+      </View>
+
+      {/* Rail Length */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-40 text-base">Length of Railings:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="Length of Railings"
           keyboardType="numeric"
           value={railLength}
           onChangeText={setRailLength}
         />
-        <Text style={styles.unit}>m</Text>
-    </View>
-     
-      <Text style={styles.section}>Railing length per group: <Text style={{ fontWeight: 'normal' }}>{railingLengthPerGroup !== '' ? ` ${railingLengthPerGroup} m` : ' ---'}</Text></Text>
-      <Text style={{ fontSize: 12, color: 'gray' }}>Note: Choose a length of railings greater than this value.</Text>
+        <Text className="w-10 text-base">m</Text>
+      </View>
 
-      <Text style={styles.section}>Calculate the No. of Railings per group:</Text>
-      <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Enter No. of Railing per length:</Text>
+      <Text className="font-bold mt-5 mb-1">
+        Railing length per group: <Text className="font-normal">{railingLengthPerGroup !== '' ? ` ${railingLengthPerGroup} m` : ' ---'}</Text>
+      </Text>
+      <Text className="text-xs text-gray-500 mb-3">Note: Choose a length of railings greater than this value.</Text>
+
+      <Text className="font-bold mt-5 mb-2">Calculate the No. of Railings per group:</Text>
+
+      {/* Number of Railings */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-48 text-base">Enter No. of Railing per length:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="Enter No. of Railing per length"
           keyboardType="numeric"
           value={numberOfRailingPerLength}
           onChangeText={setNumberOfRailingPerLength}
         />
-        <Text style={styles.unit}></Text>
-    </View>
-    
+      </View>
 
-      <Text style={styles.section}>Comparison: <Text style={{ fontWeight: 'normal' }}>{comparison !== '' ? ` ${comparison} m - ${comparisonStatus}` : ' ---'}</Text></Text>
+      <Text className="font-bold mt-5 mb-1">
+        Comparison: <Text className="font-normal">{comparison !== '' ? ` ${comparison} m - ${comparisonStatus}` : ' ---'}</Text>
+      </Text>
 
-      <View style={styles.inlineGroup}>
-      <Text style={styles.label}>Number of Groups:</Text>
+      {/* Number of Groups */}
+      <View className="flex-row items-center my-2">
+        <Text className="w-40 text-base">Number of Groups:</Text>
         <TextInput
-          style={styles.inlineInput}
+          className="flex-1 border border-gray-300 p-2 rounded mr-2"
           placeholder="Number of Groups"
           keyboardType="numeric"
           value={numberOfGroups}
           onChangeText={setNumberOfGroups}
         />
-        <Text style={styles.unit}></Text>
-    </View>
-     
-
-      <View style={styles.buttonContainer}>
-        <Button title="Compute Panel Accessories" onPress={compute} />
       </View>
 
-      <Text style={styles.result}>{result}</Text>
+      {/* Button */}
+       <TouchableOpacity 
+  onPress={compute} 
+  className="bg-blue-500 shadow-md shadow-zinc-400 rounded-full py-4 mt-5"
+>
+  <Text className="text-center text-white font-bold text-base">
+    Compute Panel Accessories
+  </Text>
+</TouchableOpacity>
+
+        
+
+      {/* Result */}
+      <Text className="mt-6 text-base">{result}</Text>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    flexGrow: 1,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  section: {
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 5,
-  },
-  buttonContainer: {
-    marginTop: 20,
-  },
-  result: {
-    marginTop: 20,
-    fontSize: 16,
-  },
-  inlineGroup: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginVertical: 8,
-},
-label: {
-  fontSize: 16,
-  width: 120,
-},
-inlineInput: {
-  flex: 1,
-  borderWidth: 1,
-  borderColor: '#ccc',
-  padding: 10,
-  borderRadius: 5,
-  marginRight: 6,
-},
-unit: {
-  fontSize: 16,
-  width: 30,
-},
-});

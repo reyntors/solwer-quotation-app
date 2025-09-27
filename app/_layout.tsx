@@ -1,32 +1,33 @@
-import {  DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Drawer } from 'expo-router/drawer';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { SplashScreen, Stack } from "expo-router";
+import "./globals.css";
+import { useFonts } from "expo-font";
+import { useEffect } from "react";
+import {GlobalProvider} from "@/lib/global-provider";
 
-
-// import { useColorScheme } from '@/hooks/useColorScheme';
+// Keep splash screen visible until fonts are loaded
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  // const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [fontsLoaded] = useFonts({
+    "Rubik-Bold": require("../assets/fonts/Rubik-Bold.ttf"),
+    "Rubik-ExtraBold": require("../assets/fonts/Rubik-ExtraBold.ttf"),
+    "Rubik-Light": require("../assets/fonts/Rubik-Light.ttf"),
+    "Rubik-Medium": require("../assets/fonts/Rubik-Medium.ttf"),
+    "Rubik-Regular": require("../assets/fonts/Rubik-Regular.ttf"),
+    "Rubik-SemiBold": require("../assets/fonts/Rubik-SemiBold.ttf"),
   });
 
-  if (!loaded) return null;
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Drawer>
-         <Drawer.Screen name="batteryCalculator" options={{ title: 'Battery Calculator' }} />
-        <Drawer.Screen name="railingsCalculator" options={{ title: 'Railings Calculator' }} />
-       
-        <Drawer.Screen name="index" options={{ title: '6.0 KW HYBRID (FULL) "SOLWER QUOTATION' }} />
-
-      </Drawer>
-      <StatusBar style="auto" />
-      
-    </ThemeProvider>
-    
+  <GlobalProvider>
+  <Stack screenOptions={{ headerShown: false }}/>
+  </GlobalProvider>
   );
 }
