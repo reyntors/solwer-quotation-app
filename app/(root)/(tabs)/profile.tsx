@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, ImageSourcePropType, Alert} from 'react-native';
-// import { ScrollView } from 'react-native-reanimated/lib/typescript/Animated';
+import { Alert, Image, ImageSourcePropType, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+
+import icons from '@/constants/icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import icons from '@/constants/icons'
-// import images from '@/constants/images'
-import {settings} from '@/constants/data'
-import { useGlobalContext } from '@/lib/global-provider';
+
+import { settings } from '@/constants/data';
 import { logout } from "@/lib/appwrite";
+import { useGlobalContext } from '@/lib/global-provider';
 
 
 

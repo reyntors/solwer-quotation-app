@@ -1,10 +1,11 @@
-import {Account, Avatars, Client, OAuthProvider } from "react-native-appwrite"
-import * as Linking from 'expo-linking'
-import { openAuthSessionAsync } from "expo-web-browser";
 
+// import * as Linking from "expo-linking";
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { Account, Avatars, Client, OAuthProvider } from "react-native-appwrite";
 
 export const config = {
-    platform: 'com.solwer.solwerquotation',
+    
     endpoint: process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT,
     projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID,
 }
@@ -14,50 +15,112 @@ export const client = new Client();
 client
     .setEndpoint(config.endpoint!)
     .setProject(config.projectId!)
-    .setPlatform(config.platform)
+ 
 
 export const avatar = new Avatars(client);
 export const account = new Account(client);
 
-export async function login(){
-    try {
-        const redirectUri = Linking.createURL('/')
+const deepLink = new URL(makeRedirectUri({ preferLocalhost: true }));
+const scheme = `${deepLink.protocol}//`; // e.g. 'exp://' or 'appwrite-callback-<PROJECT_ID>://'
 
-        const response = await account.createOAuth2Token(
-            OAuthProvider.Google,
-            redirectUri 
-        );
+// export async function login() {
+//   try {
+  
 
-        if(!response) throw new Error( 'Failed to login');
+//     const loginUrl = await account.createOAuth2Token(
+//       OAuthProvider.Google,
+//          `${deepLink}`,
+//         `${deepLink}`,
+//     );
+    
+
+//     // Open loginUrl and listen for the scheme redirect
+// const result = await WebBrowser.openAuthSessionAsync(`${loginUrl}`, scheme);
+
+//  // check result before accessing url
+//     if (result.type !== "success" || !("url" in result)) {
+//       throw new Error("Login cancelled or failed");
+//     }
 
 
-         const browserResult = await openAuthSessionAsync(
-            response.toString(),
-            redirectUri
-         )
 
-         if(browserResult.type !== 'success') throw new Error('Failed to login')
+//       const url = new URL(result.url);
+//     const secret = url.searchParams.get("secret")?.toString();
+//     const userId = url.searchParams.get("userId")?.toString();
+//     if (!secret || !userId) throw new Error("Create OAuth2 token failed");
 
-            const url = new URL(browserResult.url);
+//       // Step 4: check active session
+//     try {
+//       const current = await account.get();
+//       console.log("Already logged in:", current);
+//       return true; 
+//     } catch {
+//       // no active session, proceed with creating new
+//       const session = await account.createSession({ userId, secret });
+//       console.log("New session created:", session);
+//       return true;
+//     }
 
-            const secret = url.searchParams.get('secret')?.toString();
-            const userId = url.searchParams.get('userId')?.toString();
 
-            if(!secret || !userId) throw new Error('Failed to login');
+//   } catch (error) {
+//     console.error(error);
+//     return false;
+//   }
+// }
 
-            const session = await account.createSession({userId, secret});
+export async function login() {
+  try {
+    const redirectUri = makeRedirectUri({
+      scheme: "solwerquotation",
+      path: "oauth",
+    });
+    console.log("Redirect URI:", redirectUri);
 
-            if(!session) throw new Error( 'Failed to create a session');
-
-            return true;
-
-    } catch (error) {
-
-        console.error(error);
-        return false;
-        
+    // If session already exists, skip login
+    const existing = await account.get().catch(() => null);
+    if (existing) {
+      console.log("Already logged in:", existing.email);
+      return existing;
     }
+
+    // Create OAuth2 login URL
+    const response = await account.createOAuth2Token(
+      OAuthProvider.Google,
+      redirectUri,
+      redirectUri
+    );
+    if (!response) throw new Error("Create OAuth2 token failed");
+
+    // Open Google login in browser
+    const browserResult = await WebBrowser.openAuthSessionAsync(
+      response.toString(),
+      redirectUri
+    );
+    if (browserResult.type !== "success")
+      throw new Error("Login cancelled");
+
+    // Extract secret + userId from callback URL
+    const url = new URL(browserResult.url);
+    const secret = url.searchParams.get("secret")?.toString();
+    const userId = url.searchParams.get("userId")?.toString();
+    if (!secret || !userId) throw new Error("Missing params from callback");
+
+    // Create session
+    const session = await account.createSession(userId, secret);
+    console.log("✅ Session created:", session.$id);
+
+    return session;
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    return null;
+  }
 }
+
+
+
+
+
+
 
 
 
