@@ -5,9 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
-    "scheme": "solwerquotation",
+    "scheme": "appwrite-callback-68c57f4e001fac2fbd9c",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -16,8 +15,7 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.reyntors.solwerquotation"
+      "package": "com.solwer.solwerquotation"
     },
     "web": {
       "bundler": "metro",
@@ -47,7 +45,8 @@
             "./assets/fonts/Rubik-SemiBold.ttf"
           ]
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true
@@ -61,5 +60,3 @@
     "owner": "reyntors"
   }
 }
-
-

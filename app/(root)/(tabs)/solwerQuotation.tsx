@@ -1,12 +1,13 @@
 // SolwerQuotation.tsx
-import React, { useState, useEffect} from "react";
-import { View, Text, TextInput, ScrollView, Alert, Platform, PermissionsAndroid, SafeAreaView, TouchableOpacity, Image } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 // @ts-ignore
-import RNHTMLtoPDF from "react-native-html-to-pdf";
-import FileViewer from "react-native-file-viewer";
-import { Client, Databases, Query } from "appwrite";
 import icons from "@/constants/icons";
 import { useGlobalContext } from '@/lib/global-provider';
+import { Client, Databases, Query } from "appwrite";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 
 export default function SolwerQuotation() {
   const [shippingFee, setShippingFee] = useState("0");
@@ -43,7 +44,7 @@ export default function SolwerQuotation() {
           [Query.equal("userId", user?.$id)]
         );
 
-        console.log("📄 Appwrite documents loaded");
+    
 
          if (res.documents.length > 0) {
       const sorted = res.documents.sort(
@@ -179,18 +180,10 @@ export default function SolwerQuotation() {
   const with140 = grandTotal * 1.4;
 
   // ✅ Generate PDF
+ 
+  // Generate PDF
   const handleGeneratePDF = async () => {
     try {
-      if (Platform.OS === "android") {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert("Permission Denied", "Cannot generate PDF without storage permission.");
-          return;
-        }
-      }
-
       const htmlContent = `
         <html>
           <body>
@@ -198,19 +191,20 @@ export default function SolwerQuotation() {
             ${quotationData
               .map(
                 (section) => `
-                <h2>${section.title}</h2>
-                ${section.items
-                  .map(
-                    (item) => `
-                      <p>
-                        ${item.qty} pcs - ${item.description} @ ₱${item.price.toLocaleString()} \n
-                        Total: ₱${(item.qty * item.price).toLocaleString()}
-                      </p>
-                    `
-                  )
-                  .join("")}
-                <p><b>Subtotal: ₱${computeTotal(section.items).toLocaleString()}</b></p>
-              `
+                  <h2>${section.title}</h2>
+                  ${section.items
+                    .map(
+                      (item) => `
+                        <p>
+                          ${item.qty} pcs - ${item.description} @ ₱${item.price.toLocaleString()}
+                          <br />
+                          Total: ₱${(item.qty * item.price).toLocaleString()}
+                        </p>
+                      `
+                    )
+                    .join("")}
+                  <p><b>Subtotal: ₱${computeTotal(section.items).toLocaleString()}</b></p>
+                `
               )
               .join("")}
             <h2>Grand Total: ₱${grandTotal.toLocaleString()}</h2>
@@ -218,18 +212,25 @@ export default function SolwerQuotation() {
         </html>
       `;
 
-      const file = await RNHTMLtoPDF.convert({
+      const file = await Print.printToFileAsync({
         html: htmlContent,
-        fileName: "solwer_quotation",
-        directory: "Download",
       });
 
-      await FileViewer.open(file.filePath);
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Solwer Quotation PDF",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        Alert.alert("PDF Generated", `PDF saved at: ${file.uri}`);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("PDF Generation Error:", err);
       Alert.alert("Error", "Failed to generate PDF.");
     }
   };
+
 
   return (
     <SafeAreaView className="h-full bg-white-100">

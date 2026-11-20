@@ -1,5 +1,6 @@
-import { Alert } from "react-native";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const EMPTY_PARAMS: Record<string, string | number> = {};
 
 interface UseAppwriteOptions<T, P extends Record<string, string | number>> {
   fn: (params: P) => Promise<T>;
@@ -11,12 +12,12 @@ interface UseAppwriteReturn<T, P> {
   data: T | null;
   loading: boolean;
   error: string | null;
-  refetch: (newParams: P) => Promise<void>;
+  refetch: (newParams?: P) => Promise<void>;
 }
 
 export const useAppwrite = <T, P extends Record<string, string | number>>({
   fn,
-  params = {} as P,
+  params = EMPTY_PARAMS as P,
   skip = false,
 }: UseAppwriteOptions<T, P>): UseAppwriteReturn<T, P> => {
   const [data, setData] = useState<T | null>(null);
@@ -32,24 +33,37 @@ export const useAppwrite = <T, P extends Record<string, string | number>>({
         const result = await fn(fetchParams);
         setData(result);
       } catch (err: unknown) {
-        const errorMessage =
+        const message =
           err instanceof Error ? err.message : "An unknown error occurred";
-        setError(errorMessage);
-        Alert.alert("Error", errorMessage);
+
+        setError(message);
+        setData(null);
+
+        console.error("useAppwrite error:", message);
       } finally {
         setLoading(false);
       }
     },
-    [fn]
+    [fn],
   );
 
   useEffect(() => {
-    if (!skip) {
-      fetchData(params);
+    if (skip) {
+      setLoading(false);
+      return;
     }
-  }, []);
 
-  const refetch = async (newParams: P) => await fetchData(newParams);
+    fetchData(params);
+  }, [skip, fetchData, params]);
 
-  return { data, loading, error, refetch };
+  const refetch = async (newParams?: P) => {
+    await fetchData(newParams ?? params);
+  };
+
+  return {
+    data,
+    loading,
+    error,
+    refetch,
+  };
 };

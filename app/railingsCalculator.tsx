@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity } from 'react-native';
-import {Databases, ID, Client} from "react-native-appwrite"
 import { useGlobalContext } from '@/lib/global-provider';
+import { useState } from 'react';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Client, Databases, ID } from "react-native-appwrite";
 
 export const config = {
     platform: 'com.solwer.solwerquotation',
@@ -146,7 +146,6 @@ MC4-Y: ${mc4Y} pair
     }
   };
 
-  
 
   return (
     <ScrollView contentContainerClassName="p-5 flex-grow">
