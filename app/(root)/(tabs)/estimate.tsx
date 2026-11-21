@@ -1,8 +1,8 @@
 import icons from '@/constants/icons';
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
+import { useState } from 'react';
+import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Dummy appliances list
 const APPLIANCES = [
@@ -72,7 +72,7 @@ const Explore = () => {
     cost: Number((totalKwh * 18850).toFixed(0)).toLocaleString(),
     savings: Number((annualKwh * rate * 0.5).toFixed(0)).toLocaleString(),
     panels: Math.max(1, Math.ceil(totalKwh / 1.4)), // 1 panel ≈ 1.4 kWh/day
-    // inverter: `${(totalKwh / 2).toFixed(1)}kW Hybrid Inverter`,
+    inverter: `${(totalKwh / 2).toFixed(1)}kW Hybrid Inverter`,
   };
 
   const fullSystem = {

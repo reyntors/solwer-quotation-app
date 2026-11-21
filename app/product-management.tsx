@@ -11,10 +11,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Client, ID, TablesDB } from "react-native-appwrite";
+import { Client, ID, Query, TablesDB } from "react-native-appwrite";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ADMIN_EMAIL = "reyntors2@gmail.com";
+const ADMIN_EMAIL2 = "robinztorculas@gmail.com";
 
 const client = new Client()
   .setEndpoint(process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT!)
@@ -49,9 +50,9 @@ const emptyForm: ProductForm = {
 export default function ProductManagement() {
   const { user } = useGlobalContext();
 
-  const isAdmin =
-    user?.email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
+  const isAdmin = [ADMIN_EMAIL, ADMIN_EMAIL2].some(
+    (email) => user?.email?.trim().toLowerCase() === email.toLowerCase(),
+  );
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -64,15 +65,34 @@ export default function ProductManagement() {
     try {
       setLoading(true);
 
-      const response = await tablesDB.listRows({
-        databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
-        tableId: process.env.EXPO_PUBLIC_APPWRITE_QUOTATIONS_COLLECTION_ID!,
-        queries: [],
-      });
+      const limit = 100;
+      let offset = 0;
+      let allProducts: ProductRow[] = [];
 
-      setProducts(response.rows as unknown as ProductRow[]);
+      while (true) {
+        const response = await tablesDB.listRows({
+          databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
+          tableId: process.env.EXPO_PUBLIC_APPWRITE_QUOTATIONS_COLLECTION_ID!,
+          queries: [Query.limit(limit), Query.offset(offset)],
+        });
+
+        const rows = response.rows as unknown as ProductRow[];
+
+        allProducts = [...allProducts, ...rows];
+
+        if (rows.length < limit) {
+          break;
+        }
+
+        offset += limit;
+      }
+
+      setProducts(allProducts);
+
+      console.log(`Successfully loaded ${allProducts.length} products`);
     } catch (error: any) {
       console.error("Product loading error:", error);
+
       Alert.alert(
         "Loading Error",
         error?.message || "Unable to load products.",
@@ -262,6 +282,7 @@ export default function ProductManagement() {
           value={search}
           onChangeText={setSearch}
           placeholder="Search product..."
+          placeholderTextColor="#000000"
           className="border border-gray-300 rounded-xl px-4 py-3 mt-5"
         />
 
