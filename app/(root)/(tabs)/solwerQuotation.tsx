@@ -1,4 +1,3 @@
-
 import { Client, Databases, Query } from "appwrite";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -21,20 +20,14 @@ import { useGlobalContext } from "@/lib/global-provider";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system/legacy";
 
-
 const getCompanyLogoBase64 = async () => {
-  const logoAsset = Asset.fromModule(
-    require("@/assets/images/logo3.png")
-  );
+  const logoAsset = Asset.fromModule(require("@/assets/images/logo3.png"));
 
   await logoAsset.downloadAsync();
 
-  const base64 = await FileSystem.readAsStringAsync(
-    logoAsset.localUri!,
-    {
-      encoding: FileSystem.EncodingType.Base64,
-    }
-  );
+  const base64 = await FileSystem.readAsStringAsync(logoAsset.localUri!, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
 
   return `data:image/png;base64,${base64}`;
 };
@@ -108,79 +101,70 @@ export default function SolwerQuotation() {
   const [customerContact, setCustomerContact] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
 
-  
-const fetchQuotationData = useCallback(async () => {
-  if (!user?.$id) {
-    setProducts([]);
-    setLoading(false);
-    return;
-  }
+  const fetchQuotationData = useCallback(async () => {
+    if (!user?.$id) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // Fetch ALL products using pagination
-    const limit = 100;
-    let offset = 0;
-    let allProducts: ProductRow[] = [];
+      // Fetch ALL products using pagination
+      const limit = 100;
+      let offset = 0;
+      let allProducts: ProductRow[] = [];
 
-    while (true) {
-      const productResponse = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: TABLE_ID,
-        queries: [
-          Query.limit(limit),
-          Query.offset(offset),
-        ],
-      });
+      while (true) {
+        const productResponse = await tablesDB.listRows({
+          databaseId: DATABASE_ID,
+          tableId: TABLE_ID,
+          queries: [Query.limit(limit), Query.offset(offset)],
+        });
 
-      const rows = productResponse.rows as unknown as ProductRow[];
+        const rows = productResponse.rows as unknown as ProductRow[];
 
-      allProducts = [...allProducts, ...rows];
+        allProducts = [...allProducts, ...rows];
 
-      if (rows.length < limit) {
-        break;
+        if (rows.length < limit) {
+          break;
+        }
+
+        offset += limit;
       }
 
-      offset += limit;
+      setProducts(allProducts);
+
+      console.log("Quotation products loaded:", allProducts.length);
+
+      // Fetch the latest railing calculator result
+      const railingResponse = await accessoriesDB.listDocuments(
+        DATABASE_ID,
+        process.env.EXPO_PUBLIC_APPWRITE_ACCESORIES_COLLECTION_ID!,
+        [
+          Query.equal("userId", user.$id),
+          Query.orderDesc("$createdAt"),
+          Query.limit(1),
+        ],
+      );
+
+      if (railingResponse.documents.length > 0) {
+        setRailingsData(railingResponse.documents[0]);
+      } else {
+        setRailingsData(null);
+      }
+    } catch (error: any) {
+      console.error("Quotation loading error:", error);
+
+      Alert.alert(
+        "Loading Error",
+        error?.message || "Unable to load quotation products.",
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setProducts(allProducts);
-
-    console.log(
-      "Quotation products loaded:",
-      allProducts.length
-    );
-
-    // Fetch the latest railing calculator result
-    const railingResponse = await accessoriesDB.listDocuments(
-      DATABASE_ID,
-      process.env.EXPO_PUBLIC_APPWRITE_ACCESORIES_COLLECTION_ID!,
-      [
-        Query.equal("userId", user.$id),
-        Query.orderDesc("$createdAt"),
-        Query.limit(1),
-      ]
-    );
-
-    if (railingResponse.documents.length > 0) {
-      setRailingsData(railingResponse.documents[0]);
-    } else {
-      setRailingsData(null);
-    }
-
-  } catch (error: any) {
-    console.error("Quotation loading error:", error);
-
-    Alert.alert(
-      "Loading Error",
-      error?.message || "Unable to load quotation products."
-    );
-  } finally {
-    setLoading(false);
-  }
-}, [user?.$id]);
-
+  }, [user?.$id]);
 
   useEffect(() => {
     fetchQuotationData();
@@ -218,7 +202,7 @@ const fetchQuotationData = useCallback(async () => {
 
   const subtotal = quotationItems.reduce(
     (sum, item) => sum + item.qty * item.price,
-    0
+    0,
   );
 
   const shipping = Math.max(0, Number(shippingFee) || 0);
@@ -229,11 +213,12 @@ const fetchQuotationData = useCallback(async () => {
   const with135 = grandTotal * 1.35;
   const with140 = grandTotal * 1.4;
 
-  
-
   const handleGeneratePDF = async () => {
     if (quotationItems.length === 0) {
-      Alert.alert("No Products", "Please add products in Product Management first.");
+      Alert.alert(
+        "No Products",
+        "Please add products in Product Management first.",
+      );
       return;
     }
 
@@ -242,9 +227,9 @@ const fetchQuotationData = useCallback(async () => {
       const logoBase64 = await getCompanyLogoBase64();
       const now = new Date();
       const quotationNumber = `SOL-${now.getFullYear()}${String(
-        now.getMonth() + 1
+        now.getMonth() + 1,
       ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(
-        now.getHours()
+        now.getHours(),
       ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
 
       const quotationDate = now.toLocaleDateString("en-PH", {
@@ -264,7 +249,7 @@ const fetchQuotationData = useCallback(async () => {
               <td class="number">${formatCurrency(item.price)}</td>
               <td class="number">${formatCurrency(item.qty * item.price)}</td>
             </tr>
-          `
+          `,
         )
         .join("");
 
@@ -529,36 +514,7 @@ const fetchQuotationData = useCallback(async () => {
             </tr>
           </table>
 
-          <div class="package-box">
-            <b>INSTALLATION PACKAGE PRICING (1 PAX)</b>
-
-            <table class="package-table">
-              <thead>
-                <tr>
-                  <th>Package</th>
-                  <th class="number">Total Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>125% Package</td>
-                  <td class="number">${formatCurrency(with125)}</td>
-                </tr>
-                <tr>
-                  <td>130% Package</td>
-                  <td class="number">${formatCurrency(with130)}</td>
-                </tr>
-                <tr>
-                  <td>135% Package</td>
-                  <td class="number">${formatCurrency(with135)}</td>
-                </tr>
-                <tr>
-                  <td>140% Package</td>
-                  <td class="number">${formatCurrency(with140)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          
 
           <div class="terms">
             <b>TERMS AND CONDITIONS</b>
@@ -589,42 +545,41 @@ const fetchQuotationData = useCallback(async () => {
         </html>
       `;
 
-     const file = await Print.printToFileAsync({
-  html: htmlContent,
-});
+      const file = await Print.printToFileAsync({
+        html: htmlContent,
+      });
 
-// Rename PDF using customer name
-const safeCustomerName = customerName
-  .trim()
-  .replace(/[^a-zA-Z0-9_-]/g, "_");
+      // Rename PDF using customer name
+      const safeCustomerName = customerName
+        .trim()
+        .replace(/[^a-zA-Z0-9_-]/g, "_");
 
-const newUri = `${FileSystem.cacheDirectory}${safeCustomerName}_Quotation.pdf`;
+      const newUri = `${FileSystem.cacheDirectory}${safeCustomerName}_Quotation.pdf`;
 
-await FileSystem.moveAsync({
-  from: file.uri,
-  to: newUri,
-});
+      await FileSystem.moveAsync({
+        from: file.uri,
+        to: newUri,
+      });
 
-if (await Sharing.isAvailableAsync()) {
-  await Sharing.shareAsync(newUri, {
-    mimeType: "application/pdf",
-    dialogTitle: "Solwer Quotation",
-    UTI: "com.adobe.pdf",
-  });
-} else {
-  Alert.alert("PDF Generated", `PDF saved at: ${newUri}`);
-}
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(newUri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Solwer Quotation",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        Alert.alert("PDF Generated", `PDF saved at: ${newUri}`);
+      }
     } catch (error: any) {
       console.error("PDF Generation Error:", error);
       Alert.alert(
         "PDF Error",
-        error?.message || "Failed to generate quotation PDF."
+        error?.message || "Failed to generate quotation PDF.",
       );
-    }
-     finally {
+    } finally {
       setGeneratingPDF(false);
-    
-     }}
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -654,9 +609,7 @@ if (await Sharing.isAvailableAsync()) {
             className="border border-gray-300 rounded-lg px-3 py-3 text-black"
           />
 
-          <Text className="font-rubik-medium mb-2 mt-4">
-            Contact Number
-          </Text>
+          <Text className="font-rubik-medium mb-2 mt-4">Contact Number</Text>
           <TextInput
             value={customerContact}
             onChangeText={setCustomerContact}
@@ -679,14 +632,10 @@ if (await Sharing.isAvailableAsync()) {
         </View>
 
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-lg font-rubik-bold">
-            Quotation Items
-          </Text>
+          <Text className="text-lg font-rubik-bold">Quotation Items</Text>
 
           <TouchableOpacity onPress={fetchQuotationData}>
-            <Text className="text-green-700 font-rubik-medium">
-              Refresh
-            </Text>
+            <Text className="text-green-700 font-rubik-medium">Refresh</Text>
           </TouchableOpacity>
         </View>
 
@@ -744,7 +693,7 @@ if (await Sharing.isAvailableAsync()) {
           </Text>
         </View>
 
-        <View className="mt-5 bg-gray-50 rounded-xl p-4">
+        {/* <View className="mt-5 bg-gray-50 rounded-xl p-4">
           <Text className="text-lg font-rubik-bold mb-3">
             INSTALLATION PACKAGE (1 PAX)
           </Text>
@@ -761,7 +710,7 @@ if (await Sharing.isAvailableAsync()) {
           <Text>
             140%: {formatCurrency(with140)}
           </Text>
-        </View>
+        </View> */}
 
         <TouchableOpacity
           disabled={generatingPDF || quotationItems.length === 0}
