@@ -89,6 +89,93 @@ const escapeHtml = (value: string) =>
 export default function SolwerQuotation() {
   const { user } = useGlobalContext();
 
+  const [laborPercentage, setLaborPercentage] = useState("40");
+
+  const [miscellaneousRows, setMiscellaneousRows] = useState([
+    { description: "Manpower Cost", amount: "" },
+    { description: "Shipping Expense", amount: "" },
+    { description: "Workmanship", amount: "" },
+    { description: "Build Apparatus", amount: "" },
+  ]);
+
+  const [manpowerRows, setManpowerRows] = useState([
+    ["Manpower", "Foreman", "1", "1000", "5", "5000", "6400"],
+    ["", "Assistant", "1", "800", "4", "3200", "4400"],
+    ["", "Helper", "2", "800", "1", "1600", "1600"],
+    ["", "Overtime budget", "P50 / hour", "1500", "1500", "", ""],
+    ["", "Meals", "Core", "3", "350", "5", "5250"],
+    ["", "Helper", "2", "300", "1", "600", "600"],
+    ["", "Lodge", "Core", "3", "500", "4", "6000"],
+    ["", "Tagana-an → Gasoline (Vice-Versa)", "4000", "4000", "", "", ""],
+  ]);
+
+  const [travelRows, setTravelRows] = useState([
+    ["7", "Day 1", "Travel Gingoog-Tagana-an", "3000", "1500"],
+    ["8", "Day 2", "Solar Panels Mounting", "", "1500"],
+    ["9", "Day 3", "Apparatu & Batt Mounting", "", "1500"],
+    ["10", "Day 4", "Commissioning", "", "1500"],
+    ["11", "Day 5", "Travel Tagana-an-Surigao", "1000", ""],
+  ]);
+
+  const updateManpowerCell = (
+    rowIndex: number,
+    cellIndex: number,
+    value: string,
+  ) => {
+    setManpowerRows((previous) =>
+      previous.map((row, index) =>
+        index === rowIndex
+          ? row.map((cell, column) => (column === cellIndex ? value : cell))
+          : row,
+      ),
+    );
+  };
+
+  const updateTravelCell = (
+    rowIndex: number,
+    cellIndex: number,
+    value: string,
+  ) => {
+    setTravelRows((previous) =>
+      previous.map((row, index) =>
+        index === rowIndex
+          ? row.map((cell, column) => (column === cellIndex ? value : cell))
+          : row,
+      ),
+    );
+  };
+
+  const expenseNumber = (value: string) => {
+    const number = Number(value.replace(/,/g, ""));
+    return Number.isFinite(number) ? number : 0;
+  };
+
+  const manpowerTotal1 = manpowerRows.reduce(
+    (sum, row) => sum + expenseNumber(row[5]),
+    0,
+  );
+
+  const manpowerTotal2 = manpowerRows.reduce(
+    (sum, row) => sum + expenseNumber(row[6]),
+    0,
+  );
+
+  const gasolineTotal = travelRows.reduce(
+    (sum, row) => sum + expenseNumber(row[3]),
+    0,
+  );
+
+  const lodgingTotal = travelRows.reduce(
+    (sum, row) => sum + expenseNumber(row[4]),
+    0,
+  );
+
+  const peso = (value: number) =>
+    `₱${value.toLocaleString("en-PH", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [railingsData, setRailingsData] = useState<any>(null);
 
@@ -207,11 +294,6 @@ export default function SolwerQuotation() {
 
   const shipping = Math.max(0, Number(shippingFee) || 0);
   const grandTotal = subtotal + shipping;
-
-  const with125 = grandTotal * 1.25;
-  const with130 = grandTotal * 1.3;
-  const with135 = grandTotal * 1.35;
-  const with140 = grandTotal * 1.4;
 
   const handleGeneratePDF = async () => {
     if (quotationItems.length === 0) {
@@ -581,6 +663,27 @@ export default function SolwerQuotation() {
     }
   };
 
+  const getAmount = (value: string) => {
+    const parsed = Number(value.replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const manpowerCost = getAmount(miscellaneousRows[0]?.amount || "");
+  const shippingExpense = getAmount(miscellaneousRows[1]?.amount || "");
+  const workmanship = getAmount(miscellaneousRows[2]?.amount || "");
+  const buildApparatus = getAmount(miscellaneousRows[3]?.amount || "");
+
+  const totalMscCost =
+    manpowerCost + shippingExpense + workmanship + buildApparatus;
+
+  const laborRate = getAmount(laborPercentage) / 100;
+
+  const laborCost = grandTotal + grandTotal * laborRate;
+
+  const profitLimpyu = laborCost - (grandTotal + totalMscCost);
+
+  const finalProjectCost = subtotal + totalMscCost + profitLimpyu;
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView
@@ -735,6 +838,324 @@ export default function SolwerQuotation() {
             )}
           </View>
         </TouchableOpacity>
+
+        <View className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <View className="bg-gray-800 px-4 py-4">
+            <Text className="text-lg font-rubik-bold text-white">
+              MISCELLANEOUS EXPENSES
+            </Text>
+            <Text className="mt-1 text-xs text-gray-300">
+              Project cost breakdown and computation
+            </Text>
+          </View>
+
+          <View className="flex-row border-b border-gray-200 bg-gray-100 px-4 py-3">
+            <Text className="flex-1 text-xs font-rubik-bold text-gray-600">
+              DESCRIPTION
+            </Text>
+            <Text className="w-32 text-right text-xs font-rubik-bold text-gray-600">
+              AMOUNT (₱)
+            </Text>
+          </View>
+
+          {miscellaneousRows.map((item, index) => (
+            <View
+              key={index}
+              className="flex-row items-center border-b border-gray-100 px-4 py-2"
+            >
+              <TextInput
+                value={item.description}
+                onChangeText={(value) =>
+                  setMiscellaneousRows((prev) =>
+                    prev.map((row, i) =>
+                      i === index ? { ...row, description: value } : row,
+                    ),
+                  )
+                }
+                placeholder="Description"
+                className="flex-1 py-2 text-sm text-gray-800"
+              />
+
+              <TextInput
+                value={item.amount}
+                onChangeText={(value) =>
+                  setMiscellaneousRows((prev) =>
+                    prev.map((row, i) =>
+                      i === index ? { ...row, amount: value } : row,
+                    ),
+                  )
+                }
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+                className="w-32 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-right text-sm font-rubik-medium text-gray-800"
+              />
+            </View>
+          ))}
+          <View className="flex-row items-center justify-between bg-gray-50 px-3 py-3">
+            <View className="flex-1">
+              <Text className="text-xs font-rubik-bold text-gray-700">
+                LABOR COST
+              </Text>
+              <Text className="text-xs text-gray-500">
+                Labor Cost + (Material Cost × Percentage)
+              </Text>
+            </View>
+
+            <View className="flex-row items-center">
+              <TextInput
+                value={laborPercentage}
+                onChangeText={setLaborPercentage}
+                keyboardType="decimal-pad"
+                className="w-16 rounded-lg border border-gray-300 bg-white px-2 py-2 text-center text-sm font-rubik-bold"
+              />
+              <Text className="ml-1 font-rubik-bold text-gray-700">%</Text>
+            </View>
+          </View>
+
+          <View className="flex-row gap-2 p-3">
+            <TouchableOpacity
+              onPress={() =>
+                setMiscellaneousRows((prev) => [
+                  ...prev,
+                  { description: "", amount: "" },
+                ])
+              }
+              className="flex-1 rounded-lg bg-green-700 py-3"
+            >
+              <Text className="text-center text-sm font-rubik-bold text-white">
+                + Add Row
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() =>
+                setMiscellaneousRows((prev) =>
+                  prev.length > 4 ? prev.slice(0, -1) : prev,
+                )
+              }
+              className="flex-1 rounded-lg bg-red-600 py-3"
+            >
+              <Text className="text-center text-sm font-rubik-bold text-white">
+                Remove Row
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="mx-4 mb-4 overflow-hidden rounded-lg border border-gray-200">
+            {[
+              ["TOTAL MSC COST", totalMscCost],
+              ["LABOR COST (" + laborPercentage + "%)", laborCost],
+              ["PROFIT (LIMPYU)", profitLimpyu],
+            ].map(([label, amount], index) => (
+              <View
+                key={String(label)}
+                className={`flex-row items-center justify-between px-3 py-3 ${
+                  index === 2 ? "bg-green-50" : "bg-gray-50"
+                }`}
+              >
+                <Text className="flex-1 text-xs font-rubik-bold text-gray-700">
+                  {label}
+                </Text>
+                <Text className="text-sm font-rubik-bold text-gray-900">
+                  ₱
+                  {Number(amount).toLocaleString("en-PH", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+            ))}
+
+            <View className="flex-row items-center justify-between border-t-2 border-gray-300 bg-gray-800 px-3 py-4">
+              <Text className="flex-1 text-sm font-rubik-bold text-white">
+                FINAL PROJECT COST
+              </Text>
+              <Text className="text-lg font-rubik-bold text-white">
+                ₱
+                {finalProjectCost.toLocaleString("en-PH", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* MANPOWER & MAINTENANCE COST */}
+        <View className="mt-5 border border-gray-200 rounded-xl p-4">
+          <Text className="text-lg font-rubik-bold text-black-300 mb-3">
+            MANPOWER & MAINTENANCE COST
+          </Text>
+
+          <Text className="font-rubik-bold mb-3 text-green-700">
+            Manpower Cost & Maintenance
+          </Text>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View>
+              <View className="flex-row bg-green-700">
+                {[
+                  "Item",
+                  "Skilled",
+                  "Pax",
+                  "Rate",
+                  "Days",
+                  "Total",
+                  "Total",
+                ].map((header, index) => (
+                  <Text
+                    key={index}
+                    className="text-white font-rubik-bold p-2 border border-gray-300 text-center"
+                    style={{ width: 105 }}
+                  >
+                    {header}
+                  </Text>
+                ))}
+              </View>
+
+              {manpowerRows.map((row, rowIndex) => (
+                <View key={rowIndex} className="flex-row">
+                  {row.map((cell, cellIndex) => (
+                    <TextInput
+                      key={cellIndex}
+                      value={cell}
+                      onChangeText={(value) =>
+                        updateManpowerCell(rowIndex, cellIndex, value)
+                      }
+                      placeholder="Enter value"
+                      placeholderTextColor="#999"
+                      keyboardType={
+                        [2, 3, 4, 5, 6].includes(cellIndex)
+                          ? "decimal-pad"
+                          : "default"
+                      }
+                      className="border border-gray-200 px-2 py-2 text-black-300 text-sm"
+                      style={{
+                        width: 105,
+                        minHeight: 45,
+                        backgroundColor: "white",
+                      }}
+                    />
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+
+          <View className="flex-row justify-between mt-3">
+            <TouchableOpacity
+              onPress={() =>
+                setManpowerRows([
+                  ...manpowerRows,
+                  ["", "", "1", "", "1", "", ""],
+                ])
+              }
+              className="bg-green-700 rounded-lg px-4 py-2"
+            >
+              <Text className="text-white font-rubik-bold">+ Add Row</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setManpowerRows(manpowerRows.slice(0, -1))}
+              disabled={manpowerRows.length <= 1}
+              className="bg-red-500 rounded-lg px-4 py-2"
+            >
+              <Text className="text-white font-rubik-bold">Remove Row</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="mt-4 border-t border-gray-200 pt-3">
+            <Text className="font-rubik-bold text-black-300">
+              Total 1: {peso(manpowerTotal1)}
+            </Text>
+            <Text className="font-rubik-bold text-green-700 mt-1">
+              Total 2: {peso(manpowerTotal2)}
+            </Text>
+          </View>
+        </View>
+
+        {/* TRAVEL EXPENSES */}
+        <View className="mt-5 mb-5 border border-gray-200 rounded-xl p-4">
+          <Text className="text-lg font-rubik-bold text-black-300 mb-3">
+            TRAVEL EXPENSES
+          </Text>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View>
+              <View className="flex-row bg-green-700">
+                {["Date", "Day", "Activity", "Gasoline", "Lodging"].map(
+                  (header, index) => (
+                    <Text
+                      key={index}
+                      className="text-white font-rubik-bold p-2 border border-gray-300 text-center"
+                      style={{ width: 125 }}
+                    >
+                      {header}
+                    </Text>
+                  ),
+                )}
+              </View>
+
+              {travelRows.map((row, rowIndex) => (
+                <View key={rowIndex} className="flex-row">
+                  {row.map((cell, cellIndex) => (
+                    <TextInput
+                      key={cellIndex}
+                      value={cell}
+                      onChangeText={(value) =>
+                        updateTravelCell(rowIndex, cellIndex, value)
+                      }
+                      placeholder="Enter value"
+                      placeholderTextColor="#999"
+                      keyboardType={
+                        [3, 4].includes(cellIndex) ? "decimal-pad" : "default"
+                      }
+                      className="border border-gray-200 px-2 py-2 text-black-300 text-sm"
+                      style={{
+                        width: 125,
+                        minHeight: 45,
+                        backgroundColor: "white",
+                      }}
+                    />
+                  ))}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+
+          <View className="flex-row justify-between mt-3">
+            <TouchableOpacity
+              onPress={() =>
+                setTravelRows([...travelRows, ["", "", "", "", ""]])
+              }
+              className="bg-green-700 rounded-lg px-4 py-2"
+            >
+              <Text className="text-white font-rubik-bold">+ Add Row</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setTravelRows(travelRows.slice(0, -1))}
+              disabled={travelRows.length <= 1}
+              className="bg-red-500 rounded-lg px-4 py-2"
+            >
+              <Text className="text-white font-rubik-bold">Remove Row</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="mt-4 border-t border-gray-200 pt-3">
+            <Text className="font-rubik-bold text-black-300">
+              Gasoline Total: {peso(gasolineTotal)}
+            </Text>
+
+            <Text className="font-rubik-bold text-black-300 mt-1">
+              Lodging Total: {peso(lodgingTotal)}
+            </Text>
+
+            <Text className="font-rubik-bold text-green-700 mt-1">
+              Travel Expenses Total: {peso(gasolineTotal + lodgingTotal)}
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

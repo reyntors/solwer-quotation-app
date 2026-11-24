@@ -39,7 +39,7 @@ const SignIn = () => {
 
         <View className="px-10">
           <Text className="text-base text-center uppercase font-rubik text-black-200 mb-5">
-            Welcome to Solwer Solar Solutions
+            Welcome to Solwer Solar Power Solutions
           </Text>
 
           <Text className="text-2xl font-rubik-bold text-black-300 text-center mt-2">

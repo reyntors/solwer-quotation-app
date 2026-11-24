@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Solwer Solar Quotation",
+    "name": "Solwer PV Calculator",
     "slug": "solwer-quotation",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo3.png",
     "scheme": "appwrite-callback-68c57f4e001fac2fbd9c",

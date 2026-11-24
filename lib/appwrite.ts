@@ -1,11 +1,10 @@
-
 import { makeRedirectUri } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import {
   Account,
   Avatars,
   Client,
-  OAuthProvider,
+  OAuthProvider
 } from "react-native-appwrite";
 
 export const config = {
@@ -13,7 +12,6 @@ export const config = {
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID,
   platform: "com.solwer.solwerquotation",
 };
-
 // Initialize Appwrite
 export const client = new Client();
 
@@ -28,9 +26,7 @@ export const avatar = new Avatars(client);
 // Google OAuth login
 export async function login() {
   try {
-    const deepLink = new URL(
-      makeRedirectUri({ preferLocalhost: true })
-    );
+    const deepLink = new URL(makeRedirectUri({ preferLocalhost: true }));
 
     const scheme = `${deepLink.protocol}//`;
 
@@ -64,15 +60,11 @@ export async function login() {
 
     console.log("OAuth login URL:", loginUrl.toString());
 
-    
-
     // Open browser and listen for callback
     const result = await WebBrowser.openAuthSessionAsync(
       loginUrl.toString(),
-      scheme
+      scheme,
     );
-
-    
 
     console.log("Browser result:", JSON.stringify(result));
 
@@ -98,10 +90,35 @@ export async function login() {
 
     console.log("Google login successful:", session.$id);
 
+    // Retrieve Google profile picture
+    try {
+      if (session.providerAccessToken) {
+        const googleResponse = await fetch(
+          "https://www.googleapis.com/oauth2/v2/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${session.providerAccessToken}`,
+            },
+          },
+        );
+
+        if (googleResponse.ok) {
+          const googleProfile = await googleResponse.json();
+
+          if (googleProfile.picture) {
+            await account.updatePrefs({
+              avatar: googleProfile.picture,
+            });
+
+            console.log("Google profile picture saved.");
+          }
+        }
+      }
+    } catch (profileError) {
+      console.log("Unable to retrieve Google profile picture:", profileError);
+    }
+
     return await account.get();
-
-    
-
   } catch (error) {
     console.error("Google Login Error:", error);
     return null;
@@ -129,16 +146,14 @@ export async function getCurrentUser() {
       return null;
     }
 
-    const initialsUrl =
-      `${config.endpoint}/avatars/initials?name=${encodeURIComponent(
-        response.name
-      )}&project=${config.projectId}`;
+    const initialsUrl = `${config.endpoint}/avatars/initials?name=${encodeURIComponent(
+      response.name,
+    )}&project=${config.projectId}`;
 
     return {
       ...response,
-      avatar: initialsUrl,
+      avatar: response.prefs?.avatar || initialsUrl,
     };
-
   } catch (error: any) {
     if (error?.code !== 401) {
       console.error("Get Current User Error:", error);
