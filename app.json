@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Solwer PV Calculator",
+    "name": "Solwer Calculator",
     "slug": "solwer-quotation",
     "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo3.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "appwrite-callback-68c57f4e001fac2fbd9c",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo3.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.solwer.solwerquotation"

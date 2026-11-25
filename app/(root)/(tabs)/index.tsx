@@ -142,7 +142,7 @@ export default function Index() {
           </Text>
 
           <Text className="text-sm text-gray-500 font-rubik mt-1">
-            Welcome to your solar energy dashboard.
+            Welcome to your solar power dashboard.
           </Text>
         </View>
 
