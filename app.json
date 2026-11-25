@@ -2,7 +2,7 @@
   "expo": {
     "name": "Solwer Calculator",
     "slug": "solwer-quotation",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "appwrite-callback-68c57f4e001fac2fbd9c",
