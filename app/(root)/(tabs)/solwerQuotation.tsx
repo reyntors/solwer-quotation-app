@@ -308,8 +308,8 @@ export default function SolwerQuotation() {
     ? quotationItems
     : quotationItems.slice(0, 3);
 
-  const shipping = Math.max(0, Number(shippingFee) || 0);
-  const grandTotal = subtotal + shipping;
+  // const shipping = Math.max(0, Number(shippingFee) || 0);
+  const grandTotal = subtotal;
 
   const handleGeneratePDF = async () => {
     if (quotationItems.length === 0) {
@@ -691,11 +691,11 @@ export default function SolwerQuotation() {
 
   const laborRate = getAmount(laborPercentage) / 100;
 
-  const laborCost = grandTotal + grandTotal * laborRate;
+  const laborCost = grandTotal * laborRate;
 
   const profitLimpyu = laborCost - (grandTotal + totalMscCost);
 
-  const finalProjectCost = subtotal + totalMscCost + profitLimpyu;
+  const finalProjectCost = grandTotal + totalMscCost + laborCost;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -749,7 +749,6 @@ export default function SolwerQuotation() {
 
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-lg font-rubik-bold">Quotation Items</Text>
-
           <TouchableOpacity onPress={fetchQuotationData}>
             <Text className="text-green-700 font-rubik-medium">Refresh</Text>
           </TouchableOpacity>
@@ -802,48 +801,10 @@ export default function SolwerQuotation() {
         )}
 
         <View className="border-t border-gray-200 pt-4 mt-3">
-          {/* <View className="flex-row items-center mb-4">
-            <Text className="w-32 text-base font-rubik-medium">
-              Shipping Fee:
-            </Text>
-
-            <TextInput
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-black"
-              placeholder="Enter shipping fee"
-              placeholderTextColor="#888"
-              keyboardType="numeric"
-              value={shippingFee}
-              onChangeText={setShippingFee}
-            />
-          </View>
-
-          <Text className="text-base text-gray-500">
-            Subtotal: {formatCurrency(subtotal)}
-          </Text> */}
-
           <Text className="text-xl font-rubik-bold text-right mt-2">
             GRAND TOTAL: {formatCurrency(grandTotal)}
           </Text>
         </View>
-
-        {/* <View className="mt-5 bg-gray-50 rounded-xl p-4">
-          <Text className="text-lg font-rubik-bold mb-3">
-            INSTALLATION PACKAGE (1 PAX)
-          </Text>
-
-          <Text className="mb-2">
-            125%: {formatCurrency(with125)}
-          </Text>
-          <Text className="mb-2">
-            130%: {formatCurrency(with130)}
-          </Text>
-          <Text className="mb-2">
-            135%: {formatCurrency(with135)}
-          </Text>
-          <Text>
-            140%: {formatCurrency(with140)}
-          </Text>
-        </View> */}
 
         <TouchableOpacity
           disabled={generatingPDF || quotationItems.length === 0}
@@ -924,10 +885,10 @@ export default function SolwerQuotation() {
           <View className="flex-row items-center justify-between bg-gray-50 px-3 py-3">
             <View className="flex-1">
               <Text className="text-xs font-rubik-bold text-gray-700">
-                LABOR COST
+                INSTALLATION COST
               </Text>
               <Text className="text-xs text-gray-500">
-                Labor Cost + (Material Cost × Percentage)
+                ( Grand Total × Percentage)
               </Text>
             </View>
 
@@ -974,8 +935,8 @@ export default function SolwerQuotation() {
           <View className="mx-4 mb-4 overflow-hidden rounded-lg border border-gray-200">
             {[
               ["TOTAL MSC COST", totalMscCost],
-              ["LABOR COST (" + laborPercentage + "%)", laborCost],
-              ["PROFIT (LIMPYU)", profitLimpyu],
+              ["INSTALLATION COST (" + laborPercentage + "%)", laborCost],
+              // ["PROFIT (LIMPYU)", profitLimpyu],
             ].map(([label, amount], index) => (
               <View
                 key={String(label)}

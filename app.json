@@ -2,7 +2,7 @@
   "expo": {
     "name": "Solwer Calculator",
     "slug": "solwer-quotation",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "appwrite-callback-68c57f4e001fac2fbd9c",
@@ -47,7 +47,8 @@
         }
       ],
       "expo-sharing",
-      "expo-asset"
+      "expo-asset",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true
@@ -58,6 +59,12 @@
         "projectId": "8da7d6d6-aaad-4bd2-90ec-a8c405bafc11"
       }
     },
-    "owner": "reyntors"
+    "owner": "reyntors",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8da7d6d6-aaad-4bd2-90ec-a8c405bafc11"
+    }
   }
 }
